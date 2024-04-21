@@ -1,12 +1,25 @@
 import icons from 'url:../../img/icons.svg';
 export default class View {
   _data;
-  render(data) {
+
+  /**
+   * Render the recive object to the DOM
+   * @param {Object | Object[]} data  the data to be renderded
+   * @param {boolean} [render = true] if false create markup string insted of rendering to the DOM
+   * @returns {undefined | string}  markup string is returned if render = false
+   * @this {object}View instance
+   * @autor ME
+   * @todo finish implementation
+   */
+  render(data, render = true) {
     if (!data || (Array.isArray(data) && data.length === 0))
       return this.renderError();
 
     this._data = data;
     const markup = this._generateMarkup();
+    if (!render) return markup;
+    console.log(this, render);
+
     this._clear();
     this._parentEl.insertAdjacentHTML(`afterbegin`, markup);
   }
