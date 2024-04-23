@@ -22,45 +22,49 @@ class PaginationView extends View {
     const curPage = this._data.page;
     // page1 and there are other pages
     if (curPage === 1 && numPages > 1) {
-      return this._generateBtnMarkup('next', curPage);
+      return this._generateBtnMarkup('next', curPage, numPages);
     }
 
     //other page
     if (curPage < numPages) {
       return `
-      ${this._generateBtnMarkup('prev', curPage)}
-      ${this._generateBtnMarkup('next', curPage)}
+      ${this._generateBtnMarkup('prev', curPage, numPages)}
+      ${this._generateBtnMarkup('next', curPage, numPages)}
     `;
     }
 
     //last page
     if (curPage === numPages && numPages > 1) {
-      return this._generateBtnMarkup('prev', curPage);
+      return this._generateBtnMarkup('prev', curPage, numPages);
     }
     //page 1 and theres no other pages
     return ``;
     console.log(numPages);
   }
 
-  _generateBtnMarkup(direction, curPage) {
+  _generateBtnMarkup(direction, curPage, totalPages) {
+    const html = `<span class="total-pages">currently on page ${curPage} of ${totalPages}</span>`;
+
     return direction === 'prev'
       ? `<button data-goto ="${
           curPage - 1
         }" class="btn--inline pagination__btn--prev">
-      <svg class="search__icon">
-        <use href="${icons}#icon-arrow-left"></use>
-      </svg>
-      <span>Page ${curPage - 1}</span>
-    </button>`
-      : `<button data-goto ="${
+  <svg class="search__icon">
+    <use href="${icons}#icon-arrow-left"></use>
+  </svg>
+  <span>Page ${curPage - 1}</span>
+</button>
+${curPage === totalPages ? html : ''}
+ `
+      : `${curPage < totalPages ? html : ''}<button data-goto ="${
           curPage + 1
         }" class="btn--inline pagination__btn--next">
-        <span>Page ${curPage + 1}</span>
-        <svg class="search__icon">
-          <use href="${icons}#icon-arrow-right"></use>
-        </svg>
-      </button>
-      `;
+    <span>Page ${curPage + 1}</span>
+    <svg class="search__icon">
+      <use href="${icons}#icon-arrow-right"></use>
+    </svg>
+  </button>
+  `;
   }
 }
 

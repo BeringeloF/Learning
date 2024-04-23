@@ -110,11 +110,12 @@ const controlAddRecipe = async function (newRecipe) {
     addRecipeView.renderMessage();
 
     //changed id in url
-    window.history.pushState(null, '', `#${model.state.recipe.id}`)
+    window.history.pushState(null, '', `#${model.state.recipe.id}`);
 
     //close form window
     setTimeout(function () {
       addRecipeView.toggleWindow();
+      addRecipeView.removeMsg();
     }, MODAL_CLOSE_SEC * 1000);
   } catch (err) {
     console.error('err', err);
