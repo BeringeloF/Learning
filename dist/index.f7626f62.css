@@ -496,6 +496,11 @@ body {
   list-style: none;
 }
 
+.remove-default {
+  color: #2d2727;
+  text-decoration: none;
+}
+
 .pagination {
   margin-top: auto;
   padding: 0 3.5rem;
@@ -688,6 +693,10 @@ body {
   font-weight: 700;
 }
 
+.delete-icon {
+  width: 50%;
+}
+
 .add-recipe-window {
   z-index: 1000;
   background-color: #fff;
@@ -714,6 +723,10 @@ body {
   right: 1.6rem;
 }
 
+.hidden-form {
+  display: none;
+}
+
 .overlay {
   backdrop-filter: blur(4px);
   z-index: 100;
@@ -729,6 +742,12 @@ body {
 .hidden {
   visibility: hidden;
   opacity: 0;
+}
+
+.add-ing {
+  cursor: pointer;
+  width: 5%;
+  margin-right: 17px;
 }
 
 .upload {

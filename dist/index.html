@@ -17,7 +17,7 @@
     <div class="container">
       <header class="header">
         <img src="/logo.726d37a8.png" alt="Logo" class="header__logo">
-        <form class="search">
+        <form form-to-add="" class="search">
           <input type="text" class="search__field" placeholder="Search over 1,000,000 recipes...">
           <button class="btn search__btn">
             <svg class="search__icon">
@@ -29,6 +29,14 @@
 
         <nav class="nav">
           <ul class="nav__list">
+           <li class="nav__item">
+            <button class="nav__btn btn-add__shopping">
+              <svg class="nav__icon">
+                <img src="/view-shop.7d759f65.png">
+              </svg>
+              <span>Shopping list</span>
+            </button>
+           </li>
             <li class="nav__item">
               <button class="nav__btn nav__btn--add-recipe">
                 <svg class="nav__icon">
@@ -247,17 +255,17 @@
     <div class="overlay hidden"></div>
     <div class="add-recipe-window hidden">
       <button class="btn--close-modal">&times;</button>
-      <form class="upload">
+      <form form-to-add="" class="upload">
         <div class="upload__column">
           <h3 class="upload__heading">Recipe data</h3>
           <label>Title</label>
-          <input value="TEST" required="" name="title" type="text">
+          <input value="TEST11" required="" name="title" type="text">
           <label>URL</label>
-          <input value="TEST" required="" name="sourceUrl" type="text">
+          <input value="TEST11" required="" name="sourceUrl" type="text">
           <label>Image URL</label>
-          <input value="TEST" required="" name="image" type="text">
+          <input value="TEST11" required="" name="image" type="text">
           <label>Publisher</label>
-          <input value="TEST" required="" name="publisher" type="text">
+          <input value="TEST11" required="" name="publisher" type="text">
           <label>Prep time</label>
           <input value="23" required="" name="cookingTime" type="number">
           <label>Servings</label>
@@ -266,18 +274,68 @@
 
         <div class="upload__column">
           <h3 class="upload__heading">Ingredients</h3>
-          <label>Ingredient 1</label>
-          <input value="0.5,kg,Rice" type="text" required="" name="ingredient-1" placeholder="Format: 'Quantity,Unit,Description'">
-          <label>Ingredient 2</label>
-          <input value="1,,Avocado" type="text" name="ingredient-2" placeholder="Format: 'Quantity,Unit,Description'">
-          <label>Ingredient 3</label>
-          <input value=",,salt" type="text" name="ingredient-3" placeholder="Format: 'Quantity,Unit,Description'">
-          <label>Ingredient 4</label>
-          <input type="text" name="ingredient-4" placeholder="Format: 'Quantity,Unit,Description'">
-          <label>Ingredient 5</label>
-          <input type="text" name="ingredient-5" placeholder="Format: 'Quantity,Unit,Description'">
-          <label>Ingredient 6</label>
-          <input type="text" name="ingredient-6" placeholder="Format: 'Quantity,Unit,Description'">
+          <!-- Ingrediente 1 -->
+<label>Ingredient 1</label>
+<input type="text" name="ingredient-1" data-ing="1">
+
+<label class="hidden-form form-to-add" data-label="1">Quantity</label>
+<input type="number" name="quantity-1" data-qt="1" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="1">Unit</label>
+<input type="text" name="unit-1" data-unit="1" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+<!-- Ingrediente 2 -->
+<label>Ingredient 2</label>
+<input type="text" name="ingredient-2" data-ing="2">
+
+<label class="hidden-form form-to-add" data-label="2">Quantity</label>
+<input type="number" name="quantity-2" data-qt="2" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="2">Unit</label>
+<input type="text" name="unit-2" data-unit="2" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+<!-- Ingrediente 3 -->
+<label>Ingredient 3</label>
+<input type="text" name="ingredient-3" data-ing="3">
+
+<label class="hidden-form form-to-add" data-label="3">Quantity</label>
+<input type="number" name="quantity-3" data-qt="3" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="3">Unit</label>
+<input type="text" name="unit-3" data-unit="3" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+<!-- Ingrediente 4 -->
+<label>Ingredient 4</label>
+<input type="text" name="ingredient-4" data-ing="4">
+
+<label class="hidden-form form-to-add" data-label="4">Quantity</label>
+<input type="number" name="quantity-4" data-qt="4" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="4">Unit</label>
+<input type="text" name="unit-4" data-unit="4" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+<!-- Ingrediente 5 -->
+<label>Ingredient 5</label>
+<input type="text" name="ingredient-5" data-ing="5">
+
+<label class="hidden-form form-to-add" data-label="5">Quantity</label>
+<input type="number" name="quantity-5" data-qt="5" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="5">Unit</label>
+<input type="text" name="unit-5" data-unit="5" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+<!-- Ingrediente 6 -->
+<label>Ingredient 6</label>
+<input type="text" name="ingredient-6" data-ing="6">
+
+<label class="hidden-form form-to-add" data-label="6">Quantity</label>
+<input type="number" name="quantity-6" data-qt="6" class="hidden-form form-to-add">
+
+<label class="hidden-form form-to-add" data-label="6">Unit</label>
+<input type="text" name="unit-6" data-unit="6" placeholder="ex: kg, ml, lb" class="hidden-form form-to-add">
+
+
+          <button type="button" class="btn btn-add_ing">Add more ingredients</button>
         </div>
 
         <button class="btn upload__btn">

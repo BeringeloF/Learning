@@ -6,6 +6,7 @@ import resultsView from './views/resultsView.js';
 import paginationView from './views/paginationView.js';
 import bookmarksView from './views/bookmarksView.js';
 import addRecipeView from './views/addRecipeView.js';
+import addToShopView from './views/addToShopView.js';
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 /*
@@ -114,13 +115,29 @@ const controlAddRecipe = async function (newRecipe) {
 
     //close form window
     setTimeout(function () {
-      addRecipeView.toggleWindow();
-      addRecipeView.removeMsg();
+      addRecipeView.removeMsgOrErr();
     }, MODAL_CLOSE_SEC * 1000);
   } catch (err) {
     console.error('err', err);
     addRecipeView.renderError(err.message);
+
+    setTimeout(function () {
+      addRecipeView.removeMsgOrErr();
+    }, MODAL_CLOSE_SEC * 1000);
   }
+};
+
+const controlAddIngToShopList = function () {
+  //add ing list
+  model.addIngredientsToShopList(
+    model.state.recipe.ingredients,
+    model.state.recipe
+  );
+};
+
+const controlShoppingList = function () {
+  //render shoppingList
+  addToShopView.render(model.state.shoppingList);
 };
 const init = function () {
   bookmarksView.addHandlerRender(constrolBookmarks);
@@ -130,6 +147,8 @@ const init = function () {
   searchView.addHandlerSearch(controlSearchResults);
   paginationView.addHandlerClick(controlPagination);
   addRecipeView.addHandlerUpload(controlAddRecipe);
+  addToShopView.addHandlerAddIng(controlAddIngToShopList);
+  addToShopView.addHandlerShowShopList(controlShoppingList);
 };
 
 init();

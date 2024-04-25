@@ -9,6 +9,7 @@ export const state = {
     page: 1,
   },
   bookmarks: [],
+  shoppingList: [],
 };
 
 const createRecipeObject = function (data) {
@@ -90,6 +91,17 @@ export const addBookmark = function (recipe) {
   persistBookmarks();
 };
 
+export const addIngredientsToShopList = function (ingredients, recipe) {
+  const listIng = {
+    ingredients,
+    id: recipe.id,
+    title: recipe.title,
+  };
+  if (state.shoppingList.some(list => list === listIng)) return;
+
+  state.shoppingList.push(listIng);
+};
+
 export const deleteBookmark = function (id) {
   //delete bookmark
   const index = state.bookmarks.findIndex(bookmark => bookmark.id === id);
@@ -115,19 +127,24 @@ const clearBookmarks = function () {
 
 export const uploadRecipe = async function (newRecipe) {
   try {
-    const ingredients = Object.entries(newRecipe)
-      .filter(entry => entry[0].startsWith('ingredient') && entry[1] !== '')
-      .map(ing => {
-        const ingArr = ing[1].split(',').map(el => el.trim());
-        if (ingArr.length !== 3) {
-          throw new Error(
-            'Wrong ingredient format!, please use the correct format'
-          );
-        }
-        const [quantity, unit, description] = ingArr;
+    console.log(Object.entries(newRecipe));
 
-        return { quantity: quantity ? +quantity : null, unit, description };
-      });
+    const ingredients = Object.entries(newRecipe)
+      .slice(6)
+      .map((ing, i, arr) => {
+        if (ing[0].startsWith('ingredient') && ing[1] != '') {
+          const description = ing[1].trim();
+          const quantity = arr[i + 1][1];
+          const unit = arr[i + 2][1];
+          console.log(description, quantity, unit);
+
+          return { quantity: quantity ? +quantity : null, unit, description };
+        }
+      })
+      .filter(ing => ing !== undefined);
+
+    if (ingredients.length === 0)
+      throw new Error('Ingredient field shoud not be empty!');
 
     const recipe = {
       title: newRecipe.title,

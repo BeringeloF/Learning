@@ -1,5 +1,6 @@
 import View from './View.js';
 import icons from 'url:../../img/icons.svg';
+import addSho from 'url:../../img/shopping.png';
 import { Fraction } from 'fractional';
 console.log(Fraction);
 
@@ -42,6 +43,7 @@ class RecipeView extends View {
   </figure>
 
   <div class="recipe__details">
+  <img src="${addSho}" class="add-ing" alt="add to shopping list icon">
     <div class="recipe__info">
       <svg class="recipe__info-icon">
         <use href="${icons}#icon-clock"></use>
@@ -77,7 +79,7 @@ class RecipeView extends View {
         </button>
       </div>
     </div>
-
+   
     <div class="recipe__user-generated ${this._data.key ? '' : 'hidden'}">
     <svg>
     <use href="${icons}#icon-user"></use>
@@ -90,6 +92,8 @@ class RecipeView extends View {
     }"></use>
       </svg>
     </button>
+    
+  
   </div>
 
   <div class="recipe__ingredients">

@@ -25,6 +25,10 @@
   }
 }
 
+.hidden-form {
+  display: none;
+}
+
 .overlay {
   position: fixed;
   top: 0;
@@ -40,6 +44,12 @@
 .hidden {
   visibility: hidden;
   opacity: 0;
+}
+
+.add-ing {
+  width: 5%;
+  cursor: pointer;
+  margin-right: 17px;
 }
 
 .upload {

@@ -600,6 +600,8 @@ var _bookmarksViewJs = require("./views/bookmarksView.js");
 var _bookmarksViewJsDefault = parcelHelpers.interopDefault(_bookmarksViewJs);
 var _addRecipeViewJs = require("./views/addRecipeView.js");
 var _addRecipeViewJsDefault = parcelHelpers.interopDefault(_addRecipeViewJs);
+var _addToShopViewJs = require("./views/addToShopView.js");
+var _addToShopViewJsDefault = parcelHelpers.interopDefault(_addToShopViewJs);
 var _runtime = require("regenerator-runtime/runtime");
 /*
 if (module.hot) {
@@ -685,13 +687,23 @@ const controlAddRecipe = async function(newRecipe) {
         window.history.pushState(null, "", `#${_modelJs.state.recipe.id}`);
         //close form window
         setTimeout(function() {
-            (0, _addRecipeViewJsDefault.default).toggleWindow();
-            (0, _addRecipeViewJsDefault.default).removeMsg();
+            (0, _addRecipeViewJsDefault.default).removeMsgOrErr();
         }, (0, _configJs.MODAL_CLOSE_SEC) * 1000);
     } catch (err) {
         console.error("err", err);
         (0, _addRecipeViewJsDefault.default).renderError(err.message);
+        setTimeout(function() {
+            (0, _addRecipeViewJsDefault.default).removeMsgOrErr();
+        }, (0, _configJs.MODAL_CLOSE_SEC) * 1000);
     }
+};
+const controlAddIngToShopList = function() {
+    //add ing list
+    _modelJs.addIngredientsToShopList(_modelJs.state.recipe.ingredients, _modelJs.state.recipe);
+};
+const controlShoppingList = function() {
+    //render shoppingList
+    (0, _addToShopViewJsDefault.default).render(_modelJs.state.shoppingList);
 };
 const init = function() {
     (0, _bookmarksViewJsDefault.default).addHandlerRender(constrolBookmarks);
@@ -701,10 +713,12 @@ const init = function() {
     (0, _searchViewJsDefault.default).addHandlerSearch(controlSearchResults);
     (0, _paginationViewJsDefault.default).addHandlerClick(controlPagination);
     (0, _addRecipeViewJsDefault.default).addHandlerUpload(controlAddRecipe);
+    (0, _addToShopViewJsDefault.default).addHandlerAddIng(controlAddIngToShopList);
+    (0, _addToShopViewJsDefault.default).addHandlerShowShopList(controlShoppingList);
 };
 init();
 
-},{"core-js/modules/web.immediate.js":"49tUX","./model.js":"Y4A21","./views/recipeView.js":"l60JC","./views/searchView.js":"9OQAM","./views/resultsView.js":"cSbZE","./views/paginationView.js":"6z7bi","regenerator-runtime/runtime":"dXNgZ","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./views/bookmarksView.js":"4Lqzq","./views/addRecipeView.js":"i6DNj","./config.js":"k5Hzs"}],"49tUX":[function(require,module,exports) {
+},{"core-js/modules/web.immediate.js":"49tUX","./model.js":"Y4A21","./config.js":"k5Hzs","./views/recipeView.js":"l60JC","./views/searchView.js":"9OQAM","./views/resultsView.js":"cSbZE","./views/paginationView.js":"6z7bi","./views/bookmarksView.js":"4Lqzq","./views/addRecipeView.js":"i6DNj","./views/addToShopView.js":"kUbGw","regenerator-runtime/runtime":"dXNgZ","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"49tUX":[function(require,module,exports) {
 "use strict";
 // TODO: Remove this module from `core-js@4` since it's split to modules listed below
 require("52e9b3eefbbce1ed");
@@ -1946,6 +1960,7 @@ parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
 parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
 parcelHelpers.export(exports, "updateServings", ()=>updateServings);
 parcelHelpers.export(exports, "addBookmark", ()=>addBookmark);
+parcelHelpers.export(exports, "addIngredientsToShopList", ()=>addIngredientsToShopList);
 parcelHelpers.export(exports, "deleteBookmark", ()=>deleteBookmark);
 parcelHelpers.export(exports, "uploadRecipe", ()=>uploadRecipe);
 var _config = require("./config");
@@ -1958,7 +1973,8 @@ const state = {
         resultsPerPage: (0, _config.RES_PER_PAGE),
         page: 1
     },
-    bookmarks: []
+    bookmarks: [],
+    shoppingList: []
 };
 const createRecipeObject = function(data) {
     const { recipe } = data.data;
@@ -2030,6 +2046,15 @@ const addBookmark = function(recipe) {
     if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
     persistBookmarks();
 };
+const addIngredientsToShopList = function(ingredients, recipe) {
+    const listIng = {
+        ingredients,
+        id: recipe.id,
+        title: recipe.title
+    };
+    if (state.shoppingList.some((list)=>list === listIng)) return;
+    state.shoppingList.push(listIng);
+};
 const deleteBookmark = function(id) {
     //delete bookmark
     const index = state.bookmarks.findIndex((bookmark)=>bookmark.id === id);
@@ -2049,16 +2074,21 @@ const clearBookmarks = function() {
 };
 const uploadRecipe = async function(newRecipe) {
     try {
-        const ingredients = Object.entries(newRecipe).filter((entry)=>entry[0].startsWith("ingredient") && entry[1] !== "").map((ing)=>{
-            const ingArr = ing[1].split(",").map((el)=>el.trim());
-            if (ingArr.length !== 3) throw new Error("Wrong ingredient format!, please use the correct format");
-            const [quantity, unit, description] = ingArr;
-            return {
-                quantity: quantity ? +quantity : null,
-                unit,
-                description
-            };
-        });
+        console.log(Object.entries(newRecipe));
+        const ingredients = Object.entries(newRecipe).slice(6).map((ing, i, arr)=>{
+            if (ing[0].startsWith("ingredient") && ing[1] != "") {
+                const description = ing[1].trim();
+                const quantity = arr[i + 1][1];
+                const unit = arr[i + 2][1];
+                console.log(description, quantity, unit);
+                return {
+                    quantity: quantity ? +quantity : null,
+                    unit,
+                    description
+                };
+            }
+        }).filter((ing)=>ing !== undefined);
+        if (ingredients.length === 0) throw new Error("Ingredient field shoud not be empty!");
         const recipe = {
             title: newRecipe.title,
             source_url: newRecipe.sourceUrl,
@@ -2179,6 +2209,8 @@ var _viewJs = require("./View.js");
 var _viewJsDefault = parcelHelpers.interopDefault(_viewJs);
 var _iconsSvg = require("url:../../img/icons.svg");
 var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+var _shoppingPng = require("url:../../img/shopping.png");
+var _shoppingPngDefault = parcelHelpers.interopDefault(_shoppingPng);
 var _fractional = require("fractional");
 console.log((0, _fractional.Fraction));
 class RecipeView extends (0, _viewJsDefault.default) {
@@ -2218,6 +2250,7 @@ class RecipeView extends (0, _viewJsDefault.default) {
   </figure>
 
   <div class="recipe__details">
+  <img src="${0, _shoppingPngDefault.default}" class="add-ing" alt="add to shopping list icon">
     <div class="recipe__info">
       <svg class="recipe__info-icon">
         <use href="${0, _iconsSvgDefault.default}#icon-clock"></use>
@@ -2245,7 +2278,7 @@ class RecipeView extends (0, _viewJsDefault.default) {
         </button>
       </div>
     </div>
-
+   
     <div class="recipe__user-generated ${this._data.key ? "" : "hidden"}">
     <svg>
     <use href="${0, _iconsSvgDefault.default}#icon-user"></use>
@@ -2256,6 +2289,8 @@ class RecipeView extends (0, _viewJsDefault.default) {
         <use href="${0, _iconsSvgDefault.default}#icon-bookmark${this._data.bookmarked ? "-fill" : ""}"></use>
       </svg>
     </button>
+    
+  
   </div>
 
   <div class="recipe__ingredients">
@@ -2305,7 +2340,7 @@ class RecipeView extends (0, _viewJsDefault.default) {
 }
 exports.default = new RecipeView();
 
-},{"./View.js":"5cUXS","url:../../img/icons.svg":"loVOp","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5cUXS":[function(require,module,exports) {
+},{"./View.js":"5cUXS","url:../../img/icons.svg":"loVOp","url:../../img/shopping.png":"iM7gH","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5cUXS":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _iconsSvg = require("url:../../img/icons.svg");
@@ -2424,7 +2459,10 @@ exports.getBundleURL = getBundleURLCached;
 exports.getBaseURL = getBaseURL;
 exports.getOrigin = getOrigin;
 
-},{}],"3SU56":[function(require,module,exports) {
+},{}],"iM7gH":[function(require,module,exports) {
+module.exports = require("b15e9e997b523e24").getBundleURL("hWUTQ") + "shopping.dd37f0f2.png" + "?" + Date.now();
+
+},{"b15e9e997b523e24":"lgJ39"}],"3SU56":[function(require,module,exports) {
 /*
 fraction.js
 A Javascript fraction library.
@@ -2718,7 +2756,7 @@ class ResultsView extends (0, _viewJsDefault.default) {
 }
 exports.default = new ResultsView();
 
-},{"url:../../img/icons.svg":"loVOp","./View.js":"5cUXS","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./previewView.js":"1FDQ6"}],"1FDQ6":[function(require,module,exports) {
+},{"url:../../img/icons.svg":"loVOp","./View.js":"5cUXS","./previewView.js":"1FDQ6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1FDQ6":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _iconsSvg = require("url:../../img/icons.svg");
@@ -2804,7 +2842,370 @@ ${curPage === totalPages ? html : ""}
 }
 exports.default = new PaginationView();
 
-},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dXNgZ":[function(require,module,exports) {
+},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4Lqzq":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+var _viewJs = require("./View.js");
+var _viewJsDefault = parcelHelpers.interopDefault(_viewJs);
+var _previewViewJs = require("./previewView.js");
+var _previewViewJsDefault = parcelHelpers.interopDefault(_previewViewJs);
+class BookmarksView extends (0, _viewJsDefault.default) {
+    _parentEl = document.querySelector(".bookmarks__list");
+    _errorMsg = `No bookmarks yet. Find a nice recipe and bookmark it ;)`;
+    _message = "";
+    addHandlerRender(handler) {
+        window.addEventListener("load", handler);
+    }
+    _generateMarkup() {
+        console.log(`COMO`);
+        return this._data.map((bookmark)=>(0, _previewViewJsDefault.default).render(bookmark, false)).join(``);
+    }
+}
+exports.default = new BookmarksView();
+
+},{"url:../../img/icons.svg":"loVOp","./View.js":"5cUXS","./previewView.js":"1FDQ6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i6DNj":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./View");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+class AddRecipeView extends (0, _viewDefault.default) {
+    _parentEl = document.querySelector(".upload");
+    _window = document.querySelector(".add-recipe-window");
+    _overlay = document.querySelector(".overlay");
+    _btnOpen = document.querySelector(".nav__btn--add-recipe");
+    _btnClose = document.querySelector(".btn--close-modal");
+    _message = "Recipe was succesfully uploaded";
+    _urlErrorMsg = `This field must be at least five caracteres long!`;
+    _ingErrorMsg = `Wrong ingredient format!, please use the correct format!`;
+    _ingParent = document.querySelector(".upload__column");
+    _btnAddIng = document.querySelector(".btn-add_ing");
+    constructor(){
+        super();
+        this._addHandlerShowWindow();
+        this._addHandlerHiddenWindow();
+        this._overlay.addEventListener("click", this.toggleWindow.bind(this));
+        this._btnAddIng.addEventListener("click", this._addMoreIng.bind(this));
+    }
+    toggleWindow() {
+        this._overlay.classList.toggle("hidden");
+        this._window.classList.toggle("hidden");
+        if (!this._window.classList.contains("hidden")) this._parentEl.addEventListener("click", this.addHandlerToAddHandler.bind(this));
+    }
+    removeMsgOrErr() {
+        let popup = this._parentEl.querySelector(".message") ? this._parentEl.querySelector(".message") : this._parentEl.querySelector(".error");
+        if (!popup) return;
+        this._parentEl.innerHTML = "";
+        !this._window.classList.contains("hidden") && this.toggleWindow();
+        this._generateMarkup();
+    }
+    _generateMarkup() {
+        const markup = `
+   
+    <div class="upload__column">
+          <h3 class="upload__heading">Recipe data</h3>
+          <label>Title</label>
+          <input value="TEST11" required name="title" type="text" />
+          <label>URL</label>
+          <input value="TEST11" required name="sourceUrl" type="text" />
+          <label>Image URL</label>
+          <input value="TEST11" required name="image" type="text" />
+          <label>Publisher</label>
+          <input value="TEST11" required name="publisher" type="text" />
+          <label>Prep time</label>
+          <input value="23" required name="cookingTime" type="number" />
+          <label>Servings</label>
+          <input value="23" required name="servings" type="number" />
+        </div>
+
+        <div class="upload__column">
+          <h3 class="upload__heading">Ingredients</h3>
+          <!-- Ingrediente 1 -->
+<label>Ingredient 1</label>
+<input
+  type="text"
+  name="ingredient-1"
+  data-ing="1"
+/>
+
+<label class="hidden-form form-to-add" data-label="1">Quantity</label>
+<input type="number" name="quantity-1" data-qt="1" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="1">Unit</label>
+<input
+  type="text"
+  name="unit-1"
+  data-unit="1"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+<!-- Ingrediente 2 -->
+<label>Ingredient 2</label>
+<input
+  type="text"
+  name="ingredient-2"
+  data-ing="2"
+/>
+
+<label class="hidden-form form-to-add" data-label="2">Quantity</label>
+<input type="number" name="quantity-2" data-qt="2" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="2">Unit</label>
+<input
+  type="text"
+  name="unit-2"
+  data-unit="2"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+<!-- Ingrediente 3 -->
+<label>Ingredient 3</label>
+<input
+  type="text"
+  name="ingredient-3"
+  data-ing="3"
+/>
+
+<label class="hidden-form form-to-add" data-label="3">Quantity</label>
+<input type="number" name="quantity-3" data-qt="3" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="3">Unit</label>
+<input
+  type="text"
+  name="unit-3"
+  data-unit="3"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+<!-- Ingrediente 4 -->
+<label>Ingredient 4</label>
+<input
+  type="text"
+  name="ingredient-4"
+  data-ing="4"
+/>
+
+<label class="hidden-form form-to-add" data-label="4">Quantity</label>
+<input type="number" name="quantity-4" data-qt="4" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="4">Unit</label>
+<input
+  type="text"
+  name="unit-4"
+  data-unit="4"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+<!-- Ingrediente 5 -->
+<label>Ingredient 5</label>
+<input
+  type="text"
+  name="ingredient-5"
+  data-ing="5"
+/>
+
+<label class="hidden-form form-to-add" data-label="5">Quantity</label>
+<input type="number" name="quantity-5" data-qt="5" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="5">Unit</label>
+<input
+  type="text"
+  name="unit-5"
+  data-unit="5"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+<!-- Ingrediente 6 -->
+<label>Ingredient 6</label>
+<input
+  type="text"
+  name="ingredient-6"
+  data-ing="6"
+/>
+
+<label class="hidden-form form-to-add" data-label="6">Quantity</label>
+<input type="number" name="quantity-6" data-qt="6" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="6">Unit</label>
+<input
+  type="text"
+  name="unit-6"
+  data-unit="6"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+
+
+          <button type="button" class="btn btn-add_ing">Add more ingredients</button>
+        </div>
+
+        <button class="btn upload__btn">
+          <svg>
+            <use href="src/img/icons.svg#icon-upload-cloud"></use>
+          </svg>
+          <span>Upload</span>
+        </button>
+    `;
+        this._parentEl.insertAdjacentHTML("afterbegin", markup);
+    }
+    _addHandlerShowWindow() {
+        this._btnOpen.addEventListener("click", this.toggleWindow.bind(this));
+    }
+    _addHandlerHiddenWindow() {
+        this._btnClose.addEventListener("click", this.toggleWindow.bind(this));
+    }
+    addHandlerUpload(handler) {
+        this._parentEl.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const parent = document.querySelector(".upload");
+            const ingredientsEl = parent.querySelectorAll(`input[data-ing]`);
+            console.log("fdiunfh");
+            if ([
+                ...ingredientsEl
+            ].every((el)=>el.value === "")) {
+                ingredientsEl[0].placeholder = "Please specify at least one ingredient for the recipe.";
+                console.log("foi");
+                return;
+            }
+            const dataArr = [
+                ...new FormData(e.target)
+            ];
+            const data = Object.fromEntries(dataArr);
+            handler(data);
+        });
+    }
+    addHandlerToAddHandler(e) {
+        if (e.target.tagName !== "INPUT") return;
+        const input = e.target;
+        input.addEventListener("blur", this.addHandlerCheckForm.bind(this));
+        if (!input.name.startsWith("ingredient")) return;
+        const allHiddenInputs = this._parentEl.querySelectorAll(".form-to-add");
+        allHiddenInputs.forEach((el)=>el.classList.add("hidden-form"));
+        const ingNum = input.dataset.ing;
+        const labels = this._parentEl.querySelectorAll(`[data-label="${ingNum}"]`);
+        const unit = this._parentEl.querySelector(`[data-unit="${ingNum}"]`);
+        const quantity = this._parentEl.querySelector(`[data-qt="${ingNum}"]`);
+        unit.classList.remove("hidden-form");
+        quantity.classList.remove("hidden-form");
+        labels.forEach((el)=>el.classList.remove("hidden-form"));
+    }
+    addHandlerCheckForm(e) {
+        console.log("foi chamado");
+        const input = e.target;
+        console.log(input);
+        if ((input.name === "sourceUrl" || input.name === "image") && input.value.length < 5) {
+            input.value = "";
+            input.placeholder = this._urlErrorMsg;
+        }
+    }
+    _addMoreIng() {
+        const ingNum = [
+            ...this._parentEl.querySelectorAll(`[data-label]`)
+        ].slice(-1)[0].dataset.label;
+        const lastEl = this._parentEl.querySelector(`[data-unit="${ingNum}"]`);
+        const markup = `
+    <label>Ingredient ${+ingNum + 1}</label>
+<input
+  type="text"
+
+  name="ingredient"
+  data-ing="${+ingNum + 1}"
+/>
+
+<label class="hidden-form form-to-add" data-label="${+ingNum + 1}">Quantity</label>
+<input type="number" name="quantity" data-qt="${+ingNum + 1}" class="hidden-form form-to-add" />
+
+<label class="hidden-form form-to-add" data-label="${+ingNum + 1}">Unit</label>
+<input
+  type="text"
+  
+  name="unit"
+  data-unit="${+ingNum + 1}"
+  placeholder="ex: kg, ml, lb"
+  class="hidden-form form-to-add"
+/>
+         `;
+        lastEl.insertAdjacentHTML("afterend", markup);
+    }
+}
+exports.default = new AddRecipeView();
+
+},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kUbGw":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./View");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+var _fractional = require("fractional");
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+var _deletePng = require("url:../../img/delete.png");
+var _deletePngDefault = parcelHelpers.interopDefault(_deletePng);
+class AddToShopView extends (0, _viewDefault.default) {
+    _parentEl = document.querySelector(".recipe");
+    _btnAdd = document.querySelector(".btn-add__shopping");
+    _errorMsg = "No ingredients have been added to the shopping list yet.";
+    addHandlerShowShopList(handler) {
+        this._btnAdd.addEventListener("click", handler);
+    }
+    _generateMarkup() {
+        let markup = "";
+        this._data.forEach((ingList)=>{
+            markup += `
+        <ul class="recipe__ingredients">
+        <li class="recipe__ingredient">
+        <a class="remove-default" href="#${ingList.id}">
+            <h2 class="heading--2">${ingList.title}</h2>
+            <ul>
+            ${ingList.ingredients.map(this._generateIgn).join("")}
+            </ul>
+        </a>
+      </li>
+      <ul>
+      <button class=" btn btn-delete__shopping">
+     <img src="${0, _deletePngDefault.default}">
+     
+    </button>
+      `;
+        });
+        return markup;
+    }
+    addHandlerAddIng(handler) {
+        const btnParent = document.querySelector(".recipe");
+        btnParent.addEventListener("click", function(e) {
+            if (!e.target.classList.contains("add-ing")) return;
+            console.log("shopping");
+            handler();
+        });
+    }
+    _generateIgn(ing) {
+        return `
+    <li class="recipe__ingredient">
+    <svg class="recipe__icon">
+      <use href="${0, _iconsSvgDefault.default}#icon-check"></use>
+    </svg>
+    <div class="recipe__quantity">${ing.quantity ? new (0, _fractional.Fraction)(ing.quantity).toString() : ""}</div>
+    <div class="recipe__description">
+      <span class="recipe__unit">${ing.unit}</span>
+      ${ing.description}
+    </div>
+  </li>
+     `;
+    }
+}
+exports.default = new AddToShopView();
+
+},{"./View":"5cUXS","fractional":"3SU56","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/delete.png":"8bCmQ"}],"8bCmQ":[function(require,module,exports) {
+module.exports = require("c9439b4d4ad71c9").getBundleURL("hWUTQ") + "delete.f05a66b7.png" + "?" + Date.now();
+
+},{"c9439b4d4ad71c9":"lgJ39"}],"dXNgZ":[function(require,module,exports) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -3389,149 +3790,6 @@ try {
     else Function("r", "regeneratorRuntime = r")(runtime);
 }
 
-},{}],"4Lqzq":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _iconsSvg = require("url:../../img/icons.svg");
-var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
-var _viewJs = require("./View.js");
-var _viewJsDefault = parcelHelpers.interopDefault(_viewJs);
-var _previewViewJs = require("./previewView.js");
-var _previewViewJsDefault = parcelHelpers.interopDefault(_previewViewJs);
-class BookmarksView extends (0, _viewJsDefault.default) {
-    _parentEl = document.querySelector(".bookmarks__list");
-    _errorMsg = `No bookmarks yet. Find a nice recipe and bookmark it ;)`;
-    _message = "";
-    addHandlerRender(handler) {
-        window.addEventListener("load", handler);
-    }
-    _generateMarkup() {
-        console.log(`COMO`);
-        return this._data.map((bookmark)=>(0, _previewViewJsDefault.default).render(bookmark, false)).join(``);
-    }
-}
-exports.default = new BookmarksView();
-
-},{"url:../../img/icons.svg":"loVOp","./View.js":"5cUXS","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./previewView.js":"1FDQ6"}],"i6DNj":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _view = require("./View");
-var _viewDefault = parcelHelpers.interopDefault(_view);
-var _iconsSvg = require("url:../../img/icons.svg");
-var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
-class AddRecipeView extends (0, _viewDefault.default) {
-    _parentEl = document.querySelector(".upload");
-    _window = document.querySelector(".add-recipe-window");
-    _overlay = document.querySelector(".overlay");
-    _btnOpen = document.querySelector(".nav__btn--add-recipe");
-    _btnClose = document.querySelector(".btn--close-modal");
-    _message = "Recipe was succesfully uploaded";
-    _urlErrorMsg = `This field must be at least five caracteres long!`;
-    _ingErrorMsg = `Wrong ingredient format!, please use the correct format!`;
-    constructor(){
-        super();
-        this._addHandlerShowWindow();
-        this._addHandlerHiddenWindow();
-        this._overlay.addEventListener("click", this.toggleWindow.bind(this));
-    }
-    toggleWindow() {
-        this._overlay.classList.toggle("hidden");
-        this._window.classList.toggle("hidden");
-        if (!this._window.classList.contains("hidden")) this._parentEl.addEventListener("click", this.addHandlerToAddHandler.bind(this));
-    }
-    removeMsg() {
-        const msg = this._parentEl.querySelector(".message");
-        if (!msg) return;
-        this._parentEl.removeChild(msg);
-        this._generateMarkup();
-    }
-    _generateMarkup() {
-        const markup = `
-    <div class="upload__column">
-    <h3 class="upload__heading">Recipe data</h3>
-    <label>Title</label>
-    <input value="TEST" required="" name="title" type="text">
-    <label>URL</label>
-    <input value="TEST" required="" name="sourceUrl" type="text">
-    <label>Image URL</label>
-    <input value="TEST" required="" name="image" type="text">
-    <label>Publisher</label>
-    <input value="TEST" required="" name="publisher" type="text">
-    <label>Prep time</label>
-    <input value="23" required="" name="cookingTime" type="number">
-    <label>Servings</label>
-    <input value="23" required="" name="servings" type="number">
-  </div>
-
-  <div class="upload__column">
-    <h3 class="upload__heading">Ingredients</h3>
-    <label>Ingredient 1</label>
-    <input value="0.5,kg,Rice" type="text" required="" name="ingredient-1" placeholder="Format: 'Quantity,Unit,Description'">
-    <label>Ingredient 2</label>
-    <input value="1,,Avocado" type="text" name="ingredient-2" placeholder="Format: 'Quantity,Unit,Description'">
-    <label>Ingredient 3</label>
-    <input value=",,salt" type="text" name="ingredient-3" placeholder="Format: 'Quantity,Unit,Description'">
-    <label>Ingredient 4</label>
-    <input type="text" name="ingredient-4" placeholder="Format: 'Quantity,Unit,Description'">
-    <label>Ingredient 5</label>
-    <input type="text" name="ingredient-5" placeholder="Format: 'Quantity,Unit,Description'">
-    <label>Ingredient 6</label>
-    <input type="text" name="ingredient-6" placeholder="Format: 'Quantity,Unit,Description'">
-  </div>
-
-  <button class="btn upload__btn">
-    <svg>
-      <use href="/icons.21bad73c.svg#icon-upload-cloud"></use>
-    </svg>
-    <span>Upload</span>
-  </button>
-    `;
-        this._parentEl.insertAdjacentHTML("afterbegin", markup);
-    }
-    _addHandlerShowWindow() {
-        this._btnOpen.addEventListener("click", this.toggleWindow.bind(this));
-    }
-    _addHandlerHiddenWindow() {
-        this._btnClose.addEventListener("click", this.toggleWindow.bind(this));
-    }
-    addHandlerUpload(handler) {
-        this._parentEl.addEventListener("submit", function(e) {
-            e.preventDefault();
-            const dataArr = [
-                ...new FormData(this)
-            ];
-            const data = Object.fromEntries(dataArr);
-            handler(data);
-        });
-    }
-    addHandlerToAddHandler(e) {
-        if (e.target.tagName !== "INPUT") return;
-        e.target.addEventListener("blur", this.addHandlerCheckForm.bind(this));
-    }
-    addHandlerCheckForm(e) {
-        console.log("foi chamado");
-        const input = e.target;
-        console.log(input);
-        if ((input.name === "sourceUrl" || input.name === "image") && input.value.length < 5) {
-            input.value = "";
-            input.placeholder = this._urlErrorMsg;
-        }
-        if (input.name.startsWith("ingredient")) {
-            if (!input.value.includes(",")) {
-                input.value = "";
-                input.placeholder = this._ingErrorMsg;
-                return;
-            }
-            const ingArr = input.value.split(",").map((el)=>el.trim());
-            if (ingArr.length !== 3) {
-                input.value = "";
-                input.placeholder = this._ingErrorMsg;
-            }
-        }
-    }
-}
-exports.default = new AddRecipeView();
-
-},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["hycaY","aenu9"], "aenu9", "parcelRequirefad5")
+},{}]},["hycaY","aenu9"], "aenu9", "parcelRequirefad5")
 
 //# sourceMappingURL=index.e37f48ea.js.map

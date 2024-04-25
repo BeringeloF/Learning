@@ -8,7 +8,10 @@
   list-style: none;
   margin-bottom: 2rem;
 }
-
+.remove-default {
+  text-decoration: none;
+  color: rgb(45, 39, 39);
+}
 .pagination {
   margin-top: auto;
   padding: 0 3.5rem;
