@@ -35,7 +35,10 @@ export const loadRecipe = async function (id) {
     if (state.bookmarks.some(bookmark => bookmark.id === id))
       state.recipe.bookmarked = true;
     else state.recipe.bookmarked = false;
-    console.log(state.recipe);
+
+    if (state.shoppingList.some(ingList => ingList.id === id))
+      state.recipe.addedShopList = true;
+    else state.recipe.addedShopList = false;
   } catch (err) {
     throw err;
   }
@@ -81,6 +84,10 @@ const persistBookmarks = function () {
   localStorage.setItem(`bookmark`, JSON.stringify(state.bookmarks));
 };
 
+const persistShopList = function () {
+  localStorage.setItem(`shoplist`, JSON.stringify(state.shoppingList));
+};
+
 export const addBookmark = function (recipe) {
   //Add bookmark
   state.bookmarks.push(recipe);
@@ -91,15 +98,24 @@ export const addBookmark = function (recipe) {
   persistBookmarks();
 };
 
-export const addIngredientsToShopList = function (ingredients, recipe) {
-  const listIng = {
-    ingredients,
-    id: recipe.id,
-    title: recipe.title,
-  };
-  if (state.shoppingList.some(list => list === listIng)) return;
+export const addIngredientsToShopList = function (recipe) {
+  // const listIng = {
+  //   ingredients: recipe.ingredients,
+  //   id: recipe.id,
+  //   title: recipe.title,
+  // };
+  state.shoppingList.push(recipe);
+  if (recipe.id === state.recipe.id) state.recipe.addedShopList = true;
 
-  state.shoppingList.push(listIng);
+  persistShopList();
+};
+
+export const deleteIngredientsShopList = function (id) {
+  const index = state.shoppingList.findIndex(ingList => ingList.id === id);
+  state.shoppingList.splice(index, 1);
+
+  if (id === state.recipe.id) state.recipe.addedShopList = false;
+  persistShopList();
 };
 
 export const deleteBookmark = function (id) {
@@ -114,16 +130,20 @@ export const deleteBookmark = function (id) {
 
 const init = function () {
   const storage = localStorage.getItem(`bookmark`);
+  const storage2 = localStorage.getItem('shoplist');
   if (storage) state.bookmarks = JSON.parse(storage);
+  if (storage2) state.shoppingList = JSON.parse(storage2);
+  console.log(state.shoppingList);
 };
 init();
 
 console.log(state.bookmarks);
 
-const clearBookmarks = function () {
+const clearAllLocalStorage = function () {
   localStorage.clear('bookmark');
+  localStorage.clear('shoplist');
 };
-//clearBookmarks();
+//clearAllLocalStorage();
 
 export const uploadRecipe = async function (newRecipe) {
   try {

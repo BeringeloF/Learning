@@ -129,26 +129,39 @@ const controlAddRecipe = async function (newRecipe) {
 
 const controlAddIngToShopList = function () {
   //add ing list
-  model.addIngredientsToShopList(
-    model.state.recipe.ingredients,
-    model.state.recipe
-  );
+  console.log(model.state.recipe.addedShopList);
+
+  if (!model.state.recipe.addedShopList)
+    model.addIngredientsToShopList(model.state.recipe);
+  else if (model.state.recipe.addedShopList)
+    model.deleteIngredientsShopList(model.state.recipe.id);
+
+  recipeView.update(model.state.recipe);
 };
 
 const controlShoppingList = function () {
   //render shoppingList
+  console.log(model.state.shoppingList);
+  window.location.hash = '';
+
+  addToShopView.render(model.state.shoppingList);
+};
+
+const controlDeleteIngList = function (id) {
+  model.deleteIngredientsShopList(id);
   addToShopView.render(model.state.shoppingList);
 };
 const init = function () {
   bookmarksView.addHandlerRender(constrolBookmarks);
+  addToShopView.addHandlerShowShopList(controlShoppingList);
   recipeView.addHandlerRender(controlRecipes);
   recipeView.addHandlerUpdateServings(controlServings);
   recipeView.addHandlerAddBookmark(controlAddBookmark);
   searchView.addHandlerSearch(controlSearchResults);
   paginationView.addHandlerClick(controlPagination);
   addRecipeView.addHandlerUpload(controlAddRecipe);
-  addToShopView.addHandlerAddIng(controlAddIngToShopList);
-  addToShopView.addHandlerShowShopList(controlShoppingList);
+  recipeView.addHandlerAddIng(controlAddIngToShopList);
+  addToShopView.addHandlerDeleteIngList(controlDeleteIngList);
 };
 
 init();

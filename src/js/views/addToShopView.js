@@ -12,38 +12,47 @@ class AddToShopView extends View {
     this._btnAdd.addEventListener('click', handler);
   }
 
+  addHandlerDeleteIngList(handler) {
+    this._parentEl.addEventListener('click', function (e) {
+      const btn = e.target.closest('.btn-delete__shopping');
+
+      if (!btn) return;
+      const id = btn.closest('.shop-item').dataset.id;
+      console.log(id);
+
+      handler(id);
+    });
+  }
+
   _generateMarkup() {
     let markup = '';
+    console.log(this._data);
+
     this._data.forEach(ingList => {
       markup += `
+      <div class="shop-item" data-id="${ingList.id}">
         <ul class="recipe__ingredients">
         <li class="recipe__ingredient">
+        <div>
         <a class="remove-default" href="#${ingList.id}">
             <h2 class="heading--2">${ingList.title}</h2>
+        </a>
             <ul>
             ${ingList.ingredients.map(this._generateIgn).join('')}
             </ul>
-        </a>
+        </div>
+       
       </li>
       <ul>
-      <button class=" btn btn-delete__shopping">
-     <img src="${deleteIcon}">
+      <button class=" btn-delete__shopping">
+       <img src="${deleteIcon}">
      
-    </button>
+       </button>
+    </div>
       `;
     });
 
     return markup;
-  }
-
-  addHandlerAddIng(handler) {
-    const btnParent = document.querySelector('.recipe');
-    btnParent.addEventListener('click', function (e) {
-      if (!e.target.classList.contains('add-ing')) return;
-      console.log('shopping');
-
-      handler();
-    });
   }
 
   _generateIgn(ing) {
@@ -54,9 +63,7 @@ class AddToShopView extends View {
     <svg class="recipe__icon">
       <use href="${icons}#icon-check"></use>
     </svg>
-    <div class="recipe__quantity">${
-      ing.quantity ? new Fraction(ing.quantity).toString() : ''
-    }</div>
+    <div class="recipe__quantity">${ing.quantity ? ing.quantity : ''}</div>
     <div class="recipe__description">
       <span class="recipe__unit">${ing.unit}</span>
       ${ing.description}

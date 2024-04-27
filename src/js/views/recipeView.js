@@ -1,6 +1,7 @@
 import View from './View.js';
 import icons from 'url:../../img/icons.svg';
 import addSho from 'url:../../img/shopping.png';
+import added from 'url:../../img/added.png';
 import { Fraction } from 'fractional';
 console.log(Fraction);
 
@@ -8,6 +9,8 @@ class RecipeView extends View {
   _parentEl = document.querySelector('.recipe');
   _errorMsg = 'We could not find that recipe, please try another one';
   _message = '';
+  _add = this._parentEl.querySelector('.add-ing');
+  _added = this._parentEl.querySelector('.added');
 
   addHandlerRender(handler) {
     ['hashchange', 'load'].forEach(ev => {
@@ -25,6 +28,16 @@ class RecipeView extends View {
     });
   }
 
+  addHandlerAddIng(handler) {
+    this._parentEl.addEventListener('click', function (e) {
+      if (!e.target.classList.contains('add-ing')) return;
+      console.log('shopping');
+
+      handler();
+      e.target.classList.add('clicked');
+    });
+  }
+
   addHandlerAddBookmark(handler) {
     this._parentEl.addEventListener('click', function (e) {
       const btn = e.target.closest('.btn--bookmark');
@@ -34,6 +47,8 @@ class RecipeView extends View {
   }
 
   _generateMarkup() {
+    console.log(this._data.addedShopList);
+
     return `
     <figure class="recipe__fig">
     <img src="${this._data.image}" alt="Tomato" class="recipe__img" />
@@ -43,7 +58,12 @@ class RecipeView extends View {
   </figure>
 
   <div class="recipe__details">
-  <img src="${addSho}" class="add-ing" alt="add to shopping list icon">
+  ${
+    this._data.addedShopList
+      ? `<img src="${added}" class="added add-ing" alt="added to shopping list icon">`
+      : `<img src="${addSho}" class="add-ing" alt="add to shopping list icon"></img>`
+  }
+  
     <div class="recipe__info">
       <svg class="recipe__info-icon">
         <use href="${icons}#icon-clock"></use>

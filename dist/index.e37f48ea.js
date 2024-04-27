@@ -699,22 +699,32 @@ const controlAddRecipe = async function(newRecipe) {
 };
 const controlAddIngToShopList = function() {
     //add ing list
-    _modelJs.addIngredientsToShopList(_modelJs.state.recipe.ingredients, _modelJs.state.recipe);
+    console.log(_modelJs.state.recipe.addedShopList);
+    if (!_modelJs.state.recipe.addedShopList) _modelJs.addIngredientsToShopList(_modelJs.state.recipe);
+    else if (_modelJs.state.recipe.addedShopList) _modelJs.deleteIngredientsShopList(_modelJs.state.recipe.id);
+    (0, _recipeViewJsDefault.default).update(_modelJs.state.recipe);
 };
 const controlShoppingList = function() {
     //render shoppingList
+    console.log(_modelJs.state.shoppingList);
+    window.location.hash = "";
+    (0, _addToShopViewJsDefault.default).render(_modelJs.state.shoppingList);
+};
+const controlDeleteIngList = function(id) {
+    _modelJs.deleteIngredientsShopList(id);
     (0, _addToShopViewJsDefault.default).render(_modelJs.state.shoppingList);
 };
 const init = function() {
     (0, _bookmarksViewJsDefault.default).addHandlerRender(constrolBookmarks);
+    (0, _addToShopViewJsDefault.default).addHandlerShowShopList(controlShoppingList);
     (0, _recipeViewJsDefault.default).addHandlerRender(controlRecipes);
     (0, _recipeViewJsDefault.default).addHandlerUpdateServings(controlServings);
     (0, _recipeViewJsDefault.default).addHandlerAddBookmark(controlAddBookmark);
     (0, _searchViewJsDefault.default).addHandlerSearch(controlSearchResults);
     (0, _paginationViewJsDefault.default).addHandlerClick(controlPagination);
     (0, _addRecipeViewJsDefault.default).addHandlerUpload(controlAddRecipe);
-    (0, _addToShopViewJsDefault.default).addHandlerAddIng(controlAddIngToShopList);
-    (0, _addToShopViewJsDefault.default).addHandlerShowShopList(controlShoppingList);
+    (0, _recipeViewJsDefault.default).addHandlerAddIng(controlAddIngToShopList);
+    (0, _addToShopViewJsDefault.default).addHandlerDeleteIngList(controlDeleteIngList);
 };
 init();
 
@@ -1961,6 +1971,7 @@ parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
 parcelHelpers.export(exports, "updateServings", ()=>updateServings);
 parcelHelpers.export(exports, "addBookmark", ()=>addBookmark);
 parcelHelpers.export(exports, "addIngredientsToShopList", ()=>addIngredientsToShopList);
+parcelHelpers.export(exports, "deleteIngredientsShopList", ()=>deleteIngredientsShopList);
 parcelHelpers.export(exports, "deleteBookmark", ()=>deleteBookmark);
 parcelHelpers.export(exports, "uploadRecipe", ()=>uploadRecipe);
 var _config = require("./config");
@@ -1998,7 +2009,8 @@ const loadRecipe = async function(id) {
         state.recipe = createRecipeObject(data);
         if (state.bookmarks.some((bookmark)=>bookmark.id === id)) state.recipe.bookmarked = true;
         else state.recipe.bookmarked = false;
-        console.log(state.recipe);
+        if (state.shoppingList.some((ingList)=>ingList.id === id)) state.recipe.addedShopList = true;
+        else state.recipe.addedShopList = false;
     } catch (err) {
         throw err;
     }
@@ -2039,6 +2051,9 @@ const updateServings = function(newServings) {
 const persistBookmarks = function() {
     localStorage.setItem(`bookmark`, JSON.stringify(state.bookmarks));
 };
+const persistShopList = function() {
+    localStorage.setItem(`shoplist`, JSON.stringify(state.shoppingList));
+};
 const addBookmark = function(recipe) {
     //Add bookmark
     state.bookmarks.push(recipe);
@@ -2046,14 +2061,21 @@ const addBookmark = function(recipe) {
     if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
     persistBookmarks();
 };
-const addIngredientsToShopList = function(ingredients, recipe) {
-    const listIng = {
-        ingredients,
-        id: recipe.id,
-        title: recipe.title
-    };
-    if (state.shoppingList.some((list)=>list === listIng)) return;
-    state.shoppingList.push(listIng);
+const addIngredientsToShopList = function(recipe) {
+    // const listIng = {
+    //   ingredients: recipe.ingredients,
+    //   id: recipe.id,
+    //   title: recipe.title,
+    // };
+    state.shoppingList.push(recipe);
+    if (recipe.id === state.recipe.id) state.recipe.addedShopList = true;
+    persistShopList();
+};
+const deleteIngredientsShopList = function(id) {
+    const index = state.shoppingList.findIndex((ingList)=>ingList.id === id);
+    state.shoppingList.splice(index, 1);
+    if (id === state.recipe.id) state.recipe.addedShopList = false;
+    persistShopList();
 };
 const deleteBookmark = function(id) {
     //delete bookmark
@@ -2065,12 +2087,16 @@ const deleteBookmark = function(id) {
 };
 const init = function() {
     const storage = localStorage.getItem(`bookmark`);
+    const storage2 = localStorage.getItem("shoplist");
     if (storage) state.bookmarks = JSON.parse(storage);
+    if (storage2) state.shoppingList = JSON.parse(storage2);
+    console.log(state.shoppingList);
 };
 init();
 console.log(state.bookmarks);
-const clearBookmarks = function() {
+const clearAllLocalStorage = function() {
     localStorage.clear("bookmark");
+    localStorage.clear("shoplist");
 };
 const uploadRecipe = async function(newRecipe) {
     try {
@@ -2211,12 +2237,16 @@ var _iconsSvg = require("url:../../img/icons.svg");
 var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
 var _shoppingPng = require("url:../../img/shopping.png");
 var _shoppingPngDefault = parcelHelpers.interopDefault(_shoppingPng);
+var _addedPng = require("url:../../img/added.png");
+var _addedPngDefault = parcelHelpers.interopDefault(_addedPng);
 var _fractional = require("fractional");
 console.log((0, _fractional.Fraction));
 class RecipeView extends (0, _viewJsDefault.default) {
     _parentEl = document.querySelector(".recipe");
     _errorMsg = "We could not find that recipe, please try another one";
     _message = "";
+    _add = this._parentEl.querySelector(".add-ing");
+    _added = this._parentEl.querySelector(".added");
     addHandlerRender(handler) {
         [
             "hashchange",
@@ -2233,6 +2263,14 @@ class RecipeView extends (0, _viewJsDefault.default) {
             if (updateTo > 0) handler(updateTo);
         });
     }
+    addHandlerAddIng(handler) {
+        this._parentEl.addEventListener("click", function(e) {
+            if (!e.target.classList.contains("add-ing")) return;
+            console.log("shopping");
+            handler();
+            e.target.classList.add("clicked");
+        });
+    }
     addHandlerAddBookmark(handler) {
         this._parentEl.addEventListener("click", function(e) {
             const btn = e.target.closest(".btn--bookmark");
@@ -2241,6 +2279,7 @@ class RecipeView extends (0, _viewJsDefault.default) {
         });
     }
     _generateMarkup() {
+        console.log(this._data.addedShopList);
         return `
     <figure class="recipe__fig">
     <img src="${this._data.image}" alt="Tomato" class="recipe__img" />
@@ -2250,7 +2289,8 @@ class RecipeView extends (0, _viewJsDefault.default) {
   </figure>
 
   <div class="recipe__details">
-  <img src="${0, _shoppingPngDefault.default}" class="add-ing" alt="add to shopping list icon">
+  ${this._data.addedShopList ? `<img src="${0, _addedPngDefault.default}" class="added add-ing" alt="added to shopping list icon">` : `<img src="${0, _shoppingPngDefault.default}" class="add-ing" alt="add to shopping list icon"></img>`}
+  
     <div class="recipe__info">
       <svg class="recipe__info-icon">
         <use href="${0, _iconsSvgDefault.default}#icon-clock"></use>
@@ -2340,7 +2380,7 @@ class RecipeView extends (0, _viewJsDefault.default) {
 }
 exports.default = new RecipeView();
 
-},{"./View.js":"5cUXS","url:../../img/icons.svg":"loVOp","url:../../img/shopping.png":"iM7gH","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5cUXS":[function(require,module,exports) {
+},{"./View.js":"5cUXS","url:../../img/icons.svg":"loVOp","url:../../img/shopping.png":"iM7gH","fractional":"3SU56","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/added.png":"1oyZW"}],"5cUXS":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _iconsSvg = require("url:../../img/icons.svg");
@@ -2357,6 +2397,7 @@ class View {
    * @todo finish implementation
    */ render(data, render = true) {
         if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
+        console.log(this);
         this._data = data;
         const markup = this._generateMarkup();
         if (!render) return markup;
@@ -2715,7 +2756,10 @@ Fraction.primeFactors = function(n) {
 };
 module.exports.Fraction = Fraction;
 
-},{}],"9OQAM":[function(require,module,exports) {
+},{}],"1oyZW":[function(require,module,exports) {
+module.exports = require("3c17e9c658563792").getBundleURL("hWUTQ") + "added.f91e62ae.png" + "?" + Date.now();
+
+},{"3c17e9c658563792":"lgJ39"}],"9OQAM":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 class SearchView {
@@ -3155,35 +3199,42 @@ class AddToShopView extends (0, _viewDefault.default) {
     addHandlerShowShopList(handler) {
         this._btnAdd.addEventListener("click", handler);
     }
+    addHandlerDeleteIngList(handler) {
+        this._parentEl.addEventListener("click", function(e) {
+            const btn = e.target.closest(".btn-delete__shopping");
+            if (!btn) return;
+            const id = btn.closest(".shop-item").dataset.id;
+            console.log(id);
+            handler(id);
+        });
+    }
     _generateMarkup() {
         let markup = "";
+        console.log(this._data);
         this._data.forEach((ingList)=>{
             markup += `
+      <div class="shop-item" data-id="${ingList.id}">
         <ul class="recipe__ingredients">
         <li class="recipe__ingredient">
+        <div>
         <a class="remove-default" href="#${ingList.id}">
             <h2 class="heading--2">${ingList.title}</h2>
+        </a>
             <ul>
             ${ingList.ingredients.map(this._generateIgn).join("")}
             </ul>
-        </a>
+        </div>
+       
       </li>
       <ul>
-      <button class=" btn btn-delete__shopping">
-     <img src="${0, _deletePngDefault.default}">
+      <button class=" btn-delete__shopping">
+       <img src="${0, _deletePngDefault.default}">
      
-    </button>
+       </button>
+    </div>
       `;
         });
         return markup;
-    }
-    addHandlerAddIng(handler) {
-        const btnParent = document.querySelector(".recipe");
-        btnParent.addEventListener("click", function(e) {
-            if (!e.target.classList.contains("add-ing")) return;
-            console.log("shopping");
-            handler();
-        });
     }
     _generateIgn(ing) {
         return `
@@ -3191,7 +3242,7 @@ class AddToShopView extends (0, _viewDefault.default) {
     <svg class="recipe__icon">
       <use href="${0, _iconsSvgDefault.default}#icon-check"></use>
     </svg>
-    <div class="recipe__quantity">${ing.quantity ? new (0, _fractional.Fraction)(ing.quantity).toString() : ""}</div>
+    <div class="recipe__quantity">${ing.quantity ? ing.quantity : ""}</div>
     <div class="recipe__description">
       <span class="recipe__unit">${ing.unit}</span>
       ${ing.description}

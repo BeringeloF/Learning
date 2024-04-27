@@ -694,7 +694,13 @@ body {
 }
 
 .delete-icon {
-  width: 50%;
+  width: 30%;
+}
+
+.btn-delete__shopping {
+  cursor: pointer;
+  border: none;
+  margin-top: 1rem;
 }
 
 .add-recipe-window {
@@ -744,10 +750,14 @@ body {
   opacity: 0;
 }
 
-.add-ing {
+.add-ing, .added {
   cursor: pointer;
   width: 5%;
   margin-right: 17px;
+}
+
+.add-ing:hover, .added:hover {
+  width: 5.2%;
 }
 
 .upload {
