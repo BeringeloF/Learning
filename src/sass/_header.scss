@@ -142,3 +142,44 @@
     opacity: 1;
   }
 }
+
+.calendar {
+  padding: 1rem 0;
+  position: absolute;
+  // right: 0;
+  right: -2.5rem;
+  z-index: 10;
+  width: 35rem;
+  background-color: #fff;
+  box-shadow: 0 0.8rem 5rem 2rem rgba($color-grey-dark-1, 0.1);
+
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.5s 0.2s;
+
+  &__top {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+  }
+
+  &:hover,
+  .btn-calendar:hover + & {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.dspan {
+  font-size: 2.2rem;
+  font-weight: bold;
+}
+
+.dpan {
+  font-weight: 600;
+  font-size: 1.4rem;
+}
+
+.divspan {
+  margin: 1rem auto;
+}

@@ -7,6 +7,7 @@ import paginationView from './views/paginationView.js';
 import bookmarksView from './views/bookmarksView.js';
 import addRecipeView from './views/addRecipeView.js';
 import addToShopView from './views/addToShopView.js';
+import calendarView from './views/calendarView.js';
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 /*
@@ -93,6 +94,10 @@ const constrolBookmarks = function () {
   bookmarksView.render(model.state.bookmarks);
 };
 
+const controlCalendar = function () {
+  calendarView.render(model.state.weaklyMeal);
+};
+
 const controlAddRecipe = async function (newRecipe) {
   try {
     //show  loading spinner
@@ -151,8 +156,20 @@ const controlDeleteIngList = function (id) {
   model.deleteIngredientsShopList(id);
   addToShopView.render(model.state.shoppingList);
 };
+const controlShowDaysRecipe = function () {
+  recipeView.addHandlerRenderDays(model.state.recipe.markedDays);
+};
+
+const controlAssignRecipe = function (daysClicked, del) {
+  if (!del) model.markOnCalendar(model.state.recipe, daysClicked);
+  else model.desmarkOnCalendar(model.state.recipe.id, del);
+
+  calendarView.render(model.state.weaklyMeal);
+};
+
 const init = function () {
   bookmarksView.addHandlerRender(constrolBookmarks);
+  calendarView.addHandlerRender(controlCalendar);
   addToShopView.addHandlerShowShopList(controlShoppingList);
   recipeView.addHandlerRender(controlRecipes);
   recipeView.addHandlerUpdateServings(controlServings);
@@ -162,6 +179,8 @@ const init = function () {
   addRecipeView.addHandlerUpload(controlAddRecipe);
   recipeView.addHandlerAddIng(controlAddIngToShopList);
   addToShopView.addHandlerDeleteIngList(controlDeleteIngList);
+  recipeView.addHandlerShowDaysRecipe(controlShowDaysRecipe);
+  recipeView.addHandlerAssignRecipe(controlAssignRecipe);
 };
 
 init();

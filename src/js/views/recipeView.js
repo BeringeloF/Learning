@@ -1,8 +1,9 @@
-import View from './View.js';
+import View from './View';
 import icons from 'url:../../img/icons.svg';
 import addSho from 'url:../../img/shopping.png';
 import added from 'url:../../img/added.png';
 import { Fraction } from 'fractional';
+
 console.log(Fraction);
 
 class RecipeView extends View {
@@ -45,7 +46,45 @@ class RecipeView extends View {
       handler();
     });
   }
+  addHandlerRenderDays(dayNum) {
+    const daysEl = [...this._parentEl.querySelectorAll('.day')];
+    console.log(dayNum);
 
+    daysEl.forEach((dayEl, i) => {
+      dayEl.textContent = dayNum[i][0];
+      if (dayNum[i][1]) {
+        dayEl.classList.add('day-clicked');
+      }
+    });
+  }
+
+  addHandlerShowDaysRecipe(handler) {
+    this._parentEl.addEventListener('click', function (e) {
+      if (!e.target.classList.contains('assign')) return;
+      this.querySelector('.calendar-pre').classList.toggle('no-display');
+      handler();
+    });
+  }
+
+  addHandlerAssignRecipe(handler) {
+    this._parentEl.addEventListener('click', function (e) {
+      const day = e.target;
+
+      if (!day.classList.contains('day')) return;
+
+      day.classList.toggle('day-clicked');
+      const del = !day.classList.contains('day-clicked')
+        ? +day.textContent
+        : undefined;
+      const days = [...this.querySelectorAll('.day')];
+      const markedDays = days.map((day, i) => {
+        if (day.classList.contains('day-clicked')) return i;
+      });
+      console.log(markedDays);
+
+      handler(markedDays, del);
+    });
+  }
   _generateMarkup() {
     console.log(this._data.addedShopList);
 
@@ -98,7 +137,9 @@ class RecipeView extends View {
           </svg>
         </button>
       </div>
+     
     </div>
+    
    
     <div class="recipe__user-generated ${this._data.key ? '' : 'hidden'}">
     <svg>
@@ -115,7 +156,17 @@ class RecipeView extends View {
     
   
   </div>
-
+  <span class="assign ">Assign recipe to weakly meal</span>
+  <div class="calendar-pre no-display">
+   <span class="day day-1">1</span>
+   <span class="day day-2">2</span>
+   <span class="day day-3">3</span>
+   <span class="day day-4">4</span>
+   <span class="day day-5">5</span>
+   <span class="day day-6">6</span>
+   <span class="day day-7">7</span>
+  </div>
+  
   <div class="recipe__ingredients">
     <h2 class="heading--2">Recipe ingredients</h2>
     <ul class="recipe__ingredient-list">
